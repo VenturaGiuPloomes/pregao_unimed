@@ -1,21 +1,18 @@
-<script>
-	import logo from '$lib/images/unimed_logo.png';
-
-	/**
-	 * @type {string}
-	 */
-	 export let propValue
+<script lang="ts">
+	import type { ChartProps } from "../interfaces/interfaces";
+	
+	export let propsChartValue: ChartProps
 
 </script>
 
 <div class='legendaGraficos'>
-	<p id='tituloLegendaFaturamento'>R$ 50.00,00 (50%)</p>
-	<p id='legendaMeta'>R$ 100.000,00 (100%)</p>
+	<p id='tituloLegendaFaturamento'>{propsChartValue?.amount} vidas ({propsChartValue?.invoicingPerc.toFixed(1)}%)</p>
+	<p id='legendaMeta'>{propsChartValue?.goal} vidas (100%)</p>
 </div>
 <div class='graficoHorizontal'>
-	<div class='grafi bg-base-200' id='grafiMeta'>
-		<div class='grafi bg-primary' id='grafiFaturamento'>
-			<p id='legendaFaturamento'>{propValue}</p>
+	<div class='grafi bg-base-300' id='grafiMeta'>
+		<div class='grafi bg-primary' id='grafiFaturamento' style="width: {propsChartValue?.invoicingPerc}%;" >
+			<p id='legendaFaturamento'>{propsChartValue?.invoicingPerc.toFixed(1)}%</p>
 		</div>
 	</div>
 </div>
@@ -39,12 +36,12 @@
 		position: absolute;
 		width: 0%;
 		z-index: 9;
-		transition: 0.5s;
+		transition: 2s;
 	}
 	
 	#legendaFaturamento {
 		position: relative;
-		width: 99%;
+		width: 90%;
 		height: auto;
 		font-weight: bold;
 		color: white;
@@ -57,7 +54,7 @@
 		top: 50%;
 		transform: translateY(-50%);
 		
-		transition: 0.5s;
+		transition: 2s;
 	}
 	
 	.legendaGraficos{

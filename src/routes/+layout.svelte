@@ -1,12 +1,27 @@
-<script>
+<script lang="ts">
 	import './styles.css';
 	import "../app.css";
 	import medalhaoPregao from "$lib/images/medalha-Pregao-de-Vendas.png";
-	import Header from './widgets/Header.svelte';
-	import { _activeItemMenu } from './+page';
+	import Header from '../widgets/Header.svelte';
 	import { page } from '$app/stores';
+	
+	function activeItemMenu(idElementActivate: string){
+		if (typeof document !== 'undefined') {
+			let current = document.getElementsByClassName("item-activated-menu");
+			current[0].className = current[0].className.replace("bg-primary text-base-100 item-activated-menu", "")
+			let elementActivate = document.querySelector('#'+idElementActivate)
+			if (elementActivate) {
+				elementActivate.className += " bg-primary"
+				elementActivate.className += " text-base-100"
+				elementActivate.className += " item-activated-menu"
+			};
+		}
+		return null
+	}
 
-	_activeItemMenu()
+	/** @type {import('./$types').LayoutData} */
+	export let data: any;
+
 </script>
 
 <div class="app">
@@ -20,7 +35,7 @@
 				
 				<div class="container-jula">
 					<div class="grid-jula">
-						<slot />
+						<slot props={data} />
 					</div>
 				</div>
 				
@@ -38,8 +53,21 @@
 					</svg>
 				</div>
 				<ul class="menu p-5 w-80 text-base">
-					<li  aria-current={$page.url.pathname === '/' ? 'page' : undefined} >
-						<a href="/" class="bg-primary text-white" on:click={_activeItemMenu} >Meta Global</a>
+					<li aria-current={$page.url.pathname === '/' ? 'page' : undefined} >
+						<a href="/" class="bg-primary text-base-100 item-activated-menu" id="metaGlobal-activeItem" on:click={ () => activeItemMenu("metaGlobal-activeItem")} >Meta Global</a>
+					</li>
+					<li>
+						<a href="/teams" id="teams-activeItem" on:click={ () => activeItemMenu('teams-activeItem')} >Equipes</a>
+					</li>
+					<li>
+						<details open>
+							<summary>Unimeds</summary>
+							<ul>
+								<li><a href="/unimeds/smallSize" id="uniSmall-activeItem" on:click={ () => activeItemMenu('uniSmall-activeItem')}>Pequeno Porte</a></li>
+								<li><a href="/unimeds/midSize" id="uniMid-activeItem" on:click={ () => activeItemMenu('uniMid-activeItem')}>Médio Porte</a></li>
+								<li><a href="/unimeds/largeSize" id="uniLarge-activeItem" on:click={ () => activeItemMenu('uniLarge-activeItem')}>Grande Porte</a></li>
+							</ul>
+						</details>
 					</li>
 					<li>
 						<details open>
@@ -49,8 +77,8 @@
 									<details open>
 										<summary>Pequeno Porte</summary>
 										<ul>
-											<li><a on:click={_activeItemMenu} >Pessoa Física</a></li>
-											<li><a on:click={_activeItemMenu} >Pessoa Jurídica</a></li>
+											<li><a href="/employees/smallSize/pf" id="empSmallPf-activeItem" on:click={ () => activeItemMenu('empSmallPf-activeItem')}>Pessoa Física</a></li>
+											<li><a href="/employees/smallSize/pj" id="empSmallPj-activeItem" on:click={ () => activeItemMenu('empSmallPj-activeItem')}>Pessoa Jurídica</a></li>
 										</ul>
 									</details>
 								</li>
@@ -58,8 +86,8 @@
 									<details open>
 										<summary>Médio Porte</summary>
 										<ul>
-											<li><a on:click={_activeItemMenu} >Pessoa Física</a></li>
-											<li><a on:click={_activeItemMenu} >Pessoa Jurídica</a></li>
+											<li><a href="/employees/midSize/pf" id="empMidPf-activeItem" on:click={ () => activeItemMenu('empMidPf-activeItem')}>Pessoa Física</a></li>
+											<li><a href="/employees/midSize/pj" id="empMidPj-activeItem" on:click={ () => activeItemMenu('empMidPj-activeItem')}>Pessoa Jurídica</a></li>
 										</ul>
 									</details>
 								</li>
@@ -67,22 +95,11 @@
 									<details open>
 										<summary>Grande Porte</summary>
 										<ul>
-											<li><a on:click={_activeItemMenu} >Pessoa Física</a></li>
-											<li><a on:click={_activeItemMenu} >Pessoa Jurídica</a></li>
+											<li><a href="/employees/largeSize/pf" id="empLargePf-activeItem" on:click={ () => activeItemMenu('empLargePf-activeItem')}>Pessoa Física</a></li>
+											<li><a href="/employees/largeSize/pj" id="empLargePj-activeItem" on:click={ () => activeItemMenu('empLargePj-activeItem')}>Pessoa Jurídica</a></li>
 										</ul>
 									</details>
 								</li>
-							</ul>
-						</details>
-					</li>
-					<li><a>Equipes</a></li>
-					<li>
-						<details open>
-							<summary>Unimeds</summary>
-							<ul>
-								<li><a>Pequeno Porte</a></li>
-								<li><a>Médio Porte</a></li>
-								<li><a>Grande Porte</a></li>
 							</ul>
 						</details>
 					</li>
@@ -99,7 +116,7 @@
 </div>
 
 <style>
-
+	
 	.topo_navbar_logo2 {
 		margin-bottom: 18%;
 	}
@@ -108,7 +125,7 @@
 		width: 48%;
 		position: absolute;
 	}	
-
+	
 	.topo_navbar_logo2 h3 {
 		width: 52%;
 		position: absolute;

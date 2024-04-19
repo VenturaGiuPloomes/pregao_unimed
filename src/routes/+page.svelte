@@ -1,37 +1,16 @@
-<script>
+<script lang="ts">
+	import "./styles.css";
 	import { _getData } from "./+page";
-	import Chart from "./widgets/Chart.svelte";
-	
-	/**
-	* @type {string}
-	*/
-	let response
-	
-	/**
-	* @param {string} date
-	*/
-	async function getDeals(date) {
-		return _getData(`Deals?$skip=15&$top=2000&$filter=PipelineId+eq+48715+and+StatusId+eq+2+and+FinishDate+ge+${date}T00:00:00-03:00+and+FinishDate+le+${date}T23:59:59-03:00&$select=Id&$expand=Contact%28$select=TypeId%29,Owner%28$select=Name,AvatarUrl;$expand=Teams%28$expand=Team%28$expand=OtherProperties%28$select=FieldKey,IntegerValue,StringValue,ObjectValueName%29%29%29%29,OtherProperties%28$filter=FieldKey+eq+%27deal_9897BB38-F5F1-4BD4-9490-7C1383747731%27;$select=IntegerValue%29`)
-		.then(async (data) => {
-			return response = data.value
-		})
-	}
-	
-	async function getGlobalGoals() {
-		let globalGoal = 0
-		let deals = await getDeals("2023-03-02")
-		console.log(deals)
+	import Chart from "../widgets/Chart.svelte";
+	import type { ChartProps } from "../interfaces/interfaces";
 		
-		for (const deal of deals) {
-			globalGoal += deal?.OtherProperties[0]?.IntegerValue
-		}
-		
-		console.log(globalGoal)
+	export let data: any;
+
+	let propsChartValue: ChartProps = {
+		goal: data?.resp?.amountGlobal?.globalGoal,
+		amount: data?.resp?.amountGlobal?.goal,
+		invoicingPerc: data?.resp?.amountGlobal?.invoicingPerc,
 	}
-	
-	// getGlobalGoals()
-	export let propValue = '20'
-	
 </script>
 
 <svelte:head>
@@ -40,26 +19,25 @@
 </svelte:head>
 
 <section>
-	
 	<div class="card w-full bg-base-100 shadow-xl">
 		<div class="card-body">
-			
 			<div class="flex flex-col w-full">
-				<div class="grid card  rounded-box place-items-center">
+				<div class="grid card rounded-box place-items-center">
 					<h1 class="text-3xl text-primary font-bold text-center">Meta Global</h1>
 				</div> 
 				<div class="divider"></div> 
-				<div class="grid card  rounded-box place-items-center">
-					<Chart propValue={propValue} />
-				</div>
-
+				{#if (propsChartValue)}
+					<div class="grid card rounded-box place-items-center">
+						<Chart propsChartValue={propsChartValue} />
+					</div>
+				{:else}
+					<div class="card-body skeleton"></div>
+				{/if}
 			</div>
-
 		</div>
 	</div>
-	
 </section>
 
 <style>
-
+	
 </style>

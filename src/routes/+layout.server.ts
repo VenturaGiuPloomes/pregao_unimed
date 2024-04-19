@@ -1,9 +1,5 @@
 import { variables } from "../configs/variables";
 
-// since there's no dynamic data here, we can prerender
-// it so that it gets served as a static asset in production
-export const prerender = true;
-
 export async function _getData(url: string = '', data: object = {}): Promise<any> {
     const response = await fetch(variables["BASE-URL"] + url, {
         method: 'GET',
@@ -45,11 +41,15 @@ async function getUsers() {
 
 async function getGlobalGoals(deals: any[]) {
     let globalGoal = 0
-    let goal = 7000
+    let goal = 8000
     for (const deal of deals) {
         globalGoal += deal?.OtherProperties[0]?.IntegerValue
     }
-    return { globalGoal, goal }
+
+    let invoicingPerc: number = 100 - (((goal - globalGoal) / goal) * 100);
+	if (globalGoal >= goal) invoicingPerc = 100;
+
+    return { globalGoal, goal, invoicingPerc }
 }
 
 // CORRIGIR: precisa corrigir o tipo do array
@@ -113,12 +113,12 @@ async function formatData() {
                                 if ("lifes" in amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)]){
                                     amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)].lifes += lifes
                                 } else {
-                                    let obj = { lifes: 0, size: team.size, name: team.name, goal: team.goal }
+                                    let obj = { lifes: 0, size: team.size, name: team.name.replace(" - Pregão", ""), goal: team.goal }
                                     Object.assign(amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)], obj) 
                                 }
                             } else {
                                 let obj: any = {}
-                                obj[formatStringToKey(team.name)] = { lifes: 0, size: team.size, name: team.name, goal: team.goal }
+                                obj[formatStringToKey(team.name)] = { lifes: 0, size: team.size, name: team.name.replace(" - Pregão", ""), goal: team.goal }
                                 amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)] = obj
                             }
                         }
@@ -170,12 +170,12 @@ async function formatData() {
                         && formatStringToKey(team.name) in amountLocations[formatStringToKey(team.size)]
                         ){
                             if(!("lifes" in amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)])){
-                                let obj = { lifes: 0, size: team.size, name: team.name, goal: team.goal }
+                                let obj = { lifes: 0, size: team.size, name: team.name.replace(" - Pregão", ""), goal: team.goal }
                                 Object.assign(amountLocations[formatStringToKey(team.size)][formatStringToKey(team.name)], obj) 
                             }
                         } else {
                             let obj: any = {}
-                            obj[formatStringToKey(team.name)] = { lifes: 0, size: team.size, name: team.name, goal: team.goal }
+                            obj[formatStringToKey(team.name)] = { lifes: 0, size: team.size, name: team.name.replace(" - Pregão", ""), goal: team.goal }
                             amountLocations[formatStringToKey(team.size)] = obj
                         }
                     }
@@ -220,18 +220,44 @@ async function formatData() {
     for (const size of sizes) {
         if (size in amountUsers) {
             let types = Object.keys(amountUsers[size])
+            let firstUser: any = {} 
             for (const type of types) {
                 amountUsers[size][type] = orderBy_Object2Array(amountUsers[size][type])
+                for (const user of amountUsers[size][type]) {
+                    let invoicingPerc: number = 100 - (((user?.goal - user?.lifes) / user?.goal) * 100);
+                    if (user?.lifes >= user?.goal) invoicingPerc = 100;
+                    Object.assign(user, { invoicingPerc })
+                }
+                firstUser[type] = amountUsers[size][type].shift()
             }
+            Object.assign(amountUsers[size], { firstUser })
         }
         if (size in amountLocations){
             amountLocations[size] = orderBy_Object2Array(amountLocations[size])
+            for (const location of amountLocations[size]) {
+                let invoicingPerc: number = 100 - (((location?.goal - location?.lifes) / location?.goal) * 100);
+                if (location?.lifes >= location?.goal) invoicingPerc = 100;
+                Object.assign(location, { invoicingPerc })
+            }
         }
     }
     amountTeams = orderBy_Object2Array(amountTeams)
+
+    for (const team of amountTeams) {
+        let invoicingPerc: number = 100 - (((team?.goal - team?.lifes) / team?.goal) * 100);
+        if (team?.lifes >= team?.goal) invoicingPerc = 100;
+        Object.assign(team, { invoicingPerc })
+    }
+    
+    return {
+        amountTeams,
+        amountLocations,
+        amountUsers,
+        amountGlobal: await getGlobalGoals(responsesDeals)
+    }
 }
 
-// formatData()
+formatData()
 
 function formatStringToKey(text:string) {
     return text.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/-/g, "").replace(/ /g, "").toLowerCase()
@@ -285,4 +311,9 @@ function compareAmountValues(a: any, b: any) {
 
 function orderBy_Object2Array(obj:object) {
     return Object.values(obj).sort(compareAmountValues);
+}
+
+/** @type {import('./$types').LayoutServerLoad} */
+export async function load() {
+	return { resp: await formatData() };
 }
